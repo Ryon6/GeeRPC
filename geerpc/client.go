@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gee-rpc/codec"
+	"geerpc/codec"
 	"io"
 	"log"
 	"net"
@@ -116,7 +116,7 @@ func (client *Client) receive() {
 			// and call was already removed.
 			err = client.cc.ReadBody(nil)
 		case h.Error != "":
-			call.Error = fmt.Errorf(h.Error)
+			call.Error = errors.New(h.Error)
 			err = client.cc.ReadBody(nil)
 			call.done()
 		default:

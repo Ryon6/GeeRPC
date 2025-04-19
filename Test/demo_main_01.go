@@ -3,8 +3,8 @@ package Test
 import (
 	"encoding/json"
 	"fmt"
-	"gee-rpc/codec"
-	geerpc "gee-rpc/geerpc"
+	"geerpc/codec"
+	geerpc "geerpc/geerpc"
 	"log"
 	"net"
 	"time"

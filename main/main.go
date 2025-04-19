@@ -1,6 +1,6 @@
 package main
 
-import "gee-rpc/Test"
+import "geerpc/Test"
 
 func main() {
 	// error
