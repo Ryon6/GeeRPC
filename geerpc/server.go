@@ -85,19 +85,19 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 		log.Printf("rpc server: invalid codec type %s", opt.CodecType)
 		return
 	}
-	server.serveCodec(f(conn))
+	server.serveCodec(f(conn), &opt)
 }
 
 // invalidRequest is a placeholder for response argv when error occurs
 var invalidRequest = struct{}{}
 
 // 服务编解码
-func (server *Server) serveCodec(cc codec.Codec) {
+func (server *Server) serveCodec(cc codec.Codec, opt *Option) {
 	// 读取请求 readRequest
 	// 处理请求 handleRequest
 	// 回复请求 sendResponse
-	sending := new(sync.Mutex)
-	wg := new(sync.WaitGroup)
+	sending := new(sync.Mutex) // make sure to send a complete response
+	wg := new(sync.WaitGroup)  // wait until all request are handled
 	for {
 		req, err := server.readRequest(cc)
 		if err != nil {
@@ -105,11 +105,11 @@ func (server *Server) serveCodec(cc codec.Codec) {
 				break // it's not possible to recover, so close the connection
 			}
 			req.h.Error = err.Error()
-			server.sendResponse(cc, req.h, req.replyv.Interface(), sending)
+			server.sendResponse(cc, req.h, invalidRequest, sending)
 			continue
 		}
 		wg.Add(1)
-		go server.handleRequest(cc, req, sending, wg, DefaultOption.HandleTimeout)
+		go server.handleRequest(cc, req, sending, wg, opt.HandleTimeout)
 	}
 	wg.Wait()
 	_ = cc.Close()
