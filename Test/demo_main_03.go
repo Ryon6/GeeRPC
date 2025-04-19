@@ -23,7 +23,7 @@ func startServer_03(addr chan string) {
 		log.Fatal("register error:", err)
 	}
 	// pick a free port
-	l, err := net.Listen("tcp", ":0")
+	l, err := net.Listen("tcp", ":8001")
 	if err != nil {
 		log.Fatal("network error:", err)
 	}

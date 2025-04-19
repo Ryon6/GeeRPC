@@ -10,19 +10,26 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 )
 
 const MagicNumber = 0x3bef5c
 
 type Option struct {
-	MagicNumber int        // MagicNumber marks this's a geerpc request
-	CodecType   codec.Type // client may choose different Codec to encode body
+	MagicNumber    int           // MagicNumber marks this's a geerpc request
+	CodecType      codec.Type    // client may choose different Codec to encode body
+	ConnectTimeout time.Duration // 默认值为 10s
+	HandleTimeout  time.Duration // 0 means no limit
 }
 
 var DefaultOption = Option{
-	MagicNumber: MagicNumber,
-	CodecType:   codec.GobType,
+	MagicNumber:    MagicNumber,
+	CodecType:      codec.GobType,
+	ConnectTimeout: time.Second * 10,
+	HandleTimeout:  time.Second * 0,
 }
+
+var DefaultServer = NewServer()
 
 // Server represents an RPC Server.
 type Server struct {
@@ -39,8 +46,6 @@ type request struct {
 func NewServer() *Server {
 	return &Server{}
 }
-
-var DefaultServer = NewServer()
 
 // Accept accepts connections on the listener and serves requests
 // for each incoming connection.
