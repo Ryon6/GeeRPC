@@ -23,7 +23,7 @@ type Option struct {
 	HandleTimeout  time.Duration // 0 means no limit
 }
 
-var DefaultOption = Option{
+var DefaultOption = &Option{
 	MagicNumber:    MagicNumber,
 	CodecType:      codec.GobType,
 	ConnectTimeout: time.Second * 10,
@@ -135,7 +135,7 @@ func (server *Server) readRequest(cc codec.Codec) (*request, error) {
 	req := &request{h: h}
 	req.svc, req.mType, err = server.findService(h.ServiceMethod)
 	if err != nil {
-		return nil, err
+		return req, err
 	}
 
 	req.argv = req.mType.newArgv()
@@ -146,9 +146,9 @@ func (server *Server) readRequest(cc codec.Codec) (*request, error) {
 	if req.argv.Type().Kind() != reflect.Ptr {
 		argvi = req.argv.Addr().Interface()
 	}
-	if err := cc.ReadBody(argvi); err != nil {
+	if err = cc.ReadBody(argvi); err != nil {
 		log.Println("rpc server: read body err:", err)
-		return nil, err
+		return req, err
 	}
 	return req, nil
 }
@@ -176,10 +176,12 @@ func (server *Server) handleRequest(cc codec.Codec, req *request,
 		if err != nil {
 			req.h.Error = err.Error()
 			server.sendResponse(cc, req.h, invalidRequest, sending)
+			sent <- struct{}{}
+			return
 		}
 
 		// 发送报文超时
-		server.sendResponse(cc, req.h, req.replyv, sending)
+		server.sendResponse(cc, req.h, req.replyv.Interface(), sending)
 		sent <- struct{}{}
 	}()
 

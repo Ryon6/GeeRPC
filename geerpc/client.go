@@ -159,7 +159,7 @@ func newClientCodec(cc codec.Codec, opt *Option) *Client {
 // 允许用户不传入Option，这是会使用defaultOption
 func parserOptions(opts ...*Option) (*Option, error) {
 	if len(opts) == 0 || opts[0] == nil {
-		return &DefaultOption, nil
+		return DefaultOption, nil
 	}
 
 	if len(opts) != 1 {
