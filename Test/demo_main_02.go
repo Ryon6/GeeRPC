@@ -1,6 +1,7 @@
 package Test
 
 import (
+	"context"
 	"fmt"
 	"gee-rpc/geerpc"
 	"log"
@@ -36,7 +37,8 @@ func DemoMain02() {
 			defer wg.Done()
 			args := fmt.Sprintf("geerpc req %d", i)
 			var reply string
-			if err := client.Call("Foo.Sum", args, &reply); err != nil {
+			ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
+			if err := client.Call(ctx, "Foo.Sum", args, &reply); err != nil {
 				log.Fatal("Go Foo.Sum error:", err)
 			}
 			log.Println("reply:", reply)

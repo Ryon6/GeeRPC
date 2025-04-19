@@ -9,16 +9,7 @@ import (
 	"time"
 )
 
-type Foo int
-
-type Args struct{ Num1, Num2 int }
-
-func (f Foo) Sum(args Args, reply *int) error {
-	*reply = args.Num1 + args.Num2
-	return nil
-}
-
-func startServer_03(addr chan string) {
+func startServer_04(addr chan string) {
 	var foo Foo
 	if err := geerpc.Register(&foo); err != nil {
 		log.Fatal("register error:", err)
@@ -33,7 +24,7 @@ func startServer_03(addr chan string) {
 	geerpc.Accept(l)
 }
 
-func DemoMain03() {
+func DemoMain04() {
 	log.SetFlags(0)
 	addr := make(chan string)
 	go startServer_03(addr)

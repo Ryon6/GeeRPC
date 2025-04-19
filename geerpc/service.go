@@ -37,7 +37,7 @@ func (m *methodType) newArgv() reflect.Value {
 	return argv
 }
 
-func (m *methodType) newReply() reflect.Value {
+func (m *methodType) newReplyv() reflect.Value {
 	// reply must be a pointer type
 	var replyv reflect.Value = reflect.New(m.ReplyType.Elem())
 	switch replyv.Elem().Kind() {

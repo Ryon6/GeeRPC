@@ -139,7 +139,7 @@ func (server *Server) readRequest(cc codec.Codec) (*request, error) {
 	}
 
 	req.argv = req.mType.newArgv()
-	req.replyv = req.mType.newReply()
+	req.replyv = req.mType.newReplyv()
 
 	// make sure that argvi is a pointer, ReadBody need a pointer as parameter
 	argvi := req.argv.Interface()
