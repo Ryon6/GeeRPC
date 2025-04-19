@@ -1,6 +1,7 @@
 package geerpc
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -43,6 +44,7 @@ type clientResult struct {
 	err    error
 }
 
+// NewClient的函数类型，用于超时处理
 type newClientFunc func(conn net.Conn, opt *Option) (client *Client, err error)
 
 var _ io.Closer = (*Client)(nil)
@@ -251,7 +253,13 @@ func (client *Client) Go(ServiceMethod string, args, reply interface{}, done cha
 	return &call
 }
 
-func (client *Client) Call(ServiceMethod string, args, reply interface{}) error {
-	call := <-client.Go(ServiceMethod, args, reply, make(chan *Call, 1)).Done
-	return call.Error
+func (client *Client) Call(ctx context.Context, ServiceMethod string, args, reply interface{}) error {
+	call := client.Go(ServiceMethod, args, reply, make(chan *Call, 1))
+	select {
+	case <-ctx.Done():
+		client.removeCall(call.Seq)
+		return errors.New("rpc client: call failed: " + ctx.Err().Error())
+	case call := <-call.Done:
+		return call.Error
+	}
 }
