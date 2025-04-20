@@ -19,7 +19,7 @@ type XClient struct {
 var _ io.Closer = (*XClient)(nil)
 
 func NewXClient(d Discovery, mode SelectMode, opt *Option) *XClient {
-	return &XClient{d: d, mode: mode, opt: opt}
+	return &XClient{d: d, mode: mode, opt: opt, clients: make(map[string]*Client)}
 }
 
 func (xc *XClient) Close() error {
