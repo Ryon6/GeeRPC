@@ -19,22 +19,6 @@ func startServer_06(addrCh chan string) {
 	server.Accept(l)
 }
 
-func foo_06(xc *xclient.XClient, ctx context.Context, typ, serviceMethod string, args *Args) {
-	var reply int
-	var err error
-	switch typ {
-	case "call":
-		err = xc.Call(ctx, serviceMethod, args, &reply)
-	case "broadcast":
-		err = xc.Broadcast(ctx, serviceMethod, args, &reply)
-	}
-	if err != nil {
-		log.Printf("%s %s error: %v", typ, serviceMethod, err)
-	} else {
-		log.Printf("%s %s success: %d + %d = %d", typ, serviceMethod, args.Num1, args.Num2, reply)
-	}
-}
-
 func call_06(addr1, addr2 string) {
 	d := xclient.NewMultiServerDiscovery([]string{"tcp@" + addr1, "tcp@" + addr2})
 	xc := xclient.NewXClient(d, xclient.RandomSelect, nil)
@@ -45,7 +29,7 @@ func call_06(addr1, addr2 string) {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			foo_06(xc, context.Background(), "call", "Foo.Sum", &Args{Num1: i, Num2: i * i})
+			foo(xc, context.Background(), "call", "Foo.Sum", &Args{Num1: i, Num2: i * i})
 		}(i)
 	}
 	wg.Wait()
@@ -60,10 +44,10 @@ func broadcast_06(addr1, addr2 string) {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			foo_06(xc, context.Background(), "broadcast", "Foo.Sum", &Args{Num1: i, Num2: i * i})
+			foo(xc, context.Background(), "broadcast", "Foo.Sum", &Args{Num1: i, Num2: i * i})
 			// expect 2 - 5 timeout
 			ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
-			foo_06(xc, ctx, "broadcast", "Foo.Sleep", &Args{Num1: i, Num2: i * i})
+			foo(xc, ctx, "broadcast", "Foo.Sleep", &Args{Num1: i, Num2: i * i})
 		}(i)
 	}
 	wg.Wait()
