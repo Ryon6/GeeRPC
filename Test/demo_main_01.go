@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func StartServer(addr chan string) {
+func startServer_01(addr chan string) {
 	lis, err := net.Listen("tcp", ":8001")
 	if err != nil {
 		log.Fatal("network error:", err)
@@ -22,7 +22,7 @@ func StartServer(addr chan string) {
 
 func DemoMain01() {
 	addr := make(chan string)
-	go StartServer(addr)
+	go startServer_01(addr)
 
 	// in fact, following code is like a simple geerpc client
 	conn, _ := net.Dial("tcp", <-addr)

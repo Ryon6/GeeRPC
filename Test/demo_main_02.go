@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func startServer(addr chan string) {
+func startServer_02(addr chan string) {
 	// pick a free port
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -24,7 +24,7 @@ func startServer(addr chan string) {
 func DemoMain02() {
 	log.SetFlags(0)
 	addr := make(chan string)
-	go startServer(addr)
+	go startServer_02(addr)
 	client, _ := geerpc.Dial("tcp", <-addr)
 	defer func() { _ = client.Close() }()
 
