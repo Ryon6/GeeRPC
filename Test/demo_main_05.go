@@ -19,7 +19,7 @@ func startServer_05(addrCh chan string) {
 	_ = http.Serve(l, nil)
 }
 
-func call(addrCh chan string) {
+func call_05(addrCh chan string) {
 	client, _ := geerpc.DialHTTP("tcp", <-addrCh)
 	defer func() { _ = client.Close() }()
 
@@ -44,6 +44,6 @@ func call(addrCh chan string) {
 func DemoMain05() {
 	log.SetFlags(0)
 	ch := make(chan string)
-	go call(ch)
+	go call_05(ch)
 	startServer_05(ch)
 }
