@@ -66,7 +66,9 @@ func (client *Client) Close() error {
 }
 
 func (client *Client) IsAvailable() bool {
-	return !client.closing && !client.shutdown
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	return !client.shutdown && !client.closing
 }
 
 // registerCall：将参数 call 添加到 client.pending 中，并更新 client.seq。
@@ -137,9 +139,10 @@ func NewClient(conn net.Conn, opt *Option) (*Client, error) {
 	f := codec.NewCodecFuncMap[opt.CodecType]
 	if f == nil {
 		err := fmt.Errorf("invalid codec type %s", opt.CodecType)
-		log.Println("rpc invalid codec error: ", err)
+		log.Println("rpc client: codec error:", err)
 		return nil, err
 	}
+	// send options with server
 	if err := json.NewEncoder(conn).Encode(opt); err != nil {
 		log.Println("rpc client: options error: ", err)
 		_ = conn.Close()
@@ -160,7 +163,8 @@ func newClientCodec(cc codec.Codec, opt *Option) *Client {
 }
 
 // 允许用户不传入Option，这是会使用defaultOption
-func parserOptions(opts ...*Option) (*Option, error) {
+func parseOptions(opts ...*Option) (*Option, error) {
+	// if opts is nil or pass nil as parameter
 	if len(opts) == 0 || opts[0] == nil {
 		return DefaultOption, nil
 	}
@@ -177,7 +181,7 @@ func parserOptions(opts ...*Option) (*Option, error) {
 }
 
 func dialTimeout(f newClientFunc, network, address string, opts ...*Option) (client *Client, err error) {
-	opt, err := parserOptions(opts...)
+	opt, err := parseOptions(opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,8 +190,8 @@ func dialTimeout(f newClientFunc, network, address string, opts ...*Option) (cli
 		return nil, err
 	}
 	defer func() {
-		if client == nil {
-			conn.Close()
+		if err != nil {
+			_ = conn.Close()
 		}
 	}()
 
@@ -214,9 +218,12 @@ func Dial(network, address string, opts ...*Option) (client *Client, err error) 
 }
 
 func (client *Client) send(call *Call) {
+	log.Println(client)
+	// make sure that the client will send a complete request
 	client.sending.Lock()
 	defer client.sending.Unlock()
 
+	// register this call.
 	seq, err := client.registerCall(call)
 	if err != nil {
 		call.Error = err
@@ -225,13 +232,15 @@ func (client *Client) send(call *Call) {
 	}
 
 	// prepare request header
-	client.header.Seq = seq
 	client.header.ServiceMethod = call.ServiceMethod
+	client.header.Seq = seq
 	client.header.Error = ""
 
 	// encode and send the request
 	if err := client.cc.Write(&client.header, call.Args); err != nil {
-		call = client.removeCall(seq)
+		call := client.removeCall(seq)
+		// call may be nil, it usually means that Write partially failed,
+		// client has received the response and handled
 		if call != nil {
 			call.Error = err
 			call.done()
@@ -239,25 +248,24 @@ func (client *Client) send(call *Call) {
 	}
 }
 
-func (client *Client) Go(ServiceMethod string, args, reply interface{}, done chan *Call) *Call {
+func (client *Client) Go(serviceMethod string, args, reply interface{}, done chan *Call) *Call {
 	if done == nil {
-		done = make(chan *Call, 16)
+		done = make(chan *Call, 10)
 	} else if cap(done) == 0 {
 		log.Panic("rpc client: done channel is unbuffered")
 	}
-
-	call := Call{
-		ServiceMethod: ServiceMethod,
+	call := &Call{
+		ServiceMethod: serviceMethod,
 		Args:          args,
 		Reply:         reply,
 		Done:          done,
 	}
-	client.send(&call)
-	return &call
+	client.send(call)
+	return call
 }
 
-func (client *Client) Call(ctx context.Context, ServiceMethod string, args, reply interface{}) error {
-	call := client.Go(ServiceMethod, args, reply, make(chan *Call, 1))
+func (client *Client) Call(ctx context.Context, serviceMethod string, args, reply interface{}) error {
+	call := client.Go(serviceMethod, args, reply, make(chan *Call, 1))
 	select {
 	case <-ctx.Done():
 		client.removeCall(call.Seq)
