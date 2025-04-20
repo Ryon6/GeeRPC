@@ -34,6 +34,8 @@ func (xc *XClient) Close() error {
 }
 
 func (xc *XClient) dial(rpcAddr string) (*Client, error) {
+	xc.mu.Lock()
+	defer xc.mu.Unlock()
 	client, ok := xc.clients[rpcAddr]
 	if ok && !client.IsAvailable() {
 		_ = client.Close()
