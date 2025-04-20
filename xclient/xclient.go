@@ -100,7 +100,7 @@ func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, re
 				reflect.ValueOf(reply).Elem().Set(reflect.ValueOf(clonedReply).Elem())
 				replyDone = true
 			}
-			mu.Lock()
+			mu.Unlock()
 		}(rpcAddr)
 	}
 	wg.Wait()
