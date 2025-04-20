@@ -218,7 +218,6 @@ func Dial(network, address string, opts ...*Option) (client *Client, err error) 
 }
 
 func (client *Client) send(call *Call) {
-	log.Println(client)
 	// make sure that the client will send a complete request
 	client.sending.Lock()
 	defer client.sending.Unlock()
