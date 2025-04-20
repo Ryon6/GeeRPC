@@ -33,6 +33,8 @@ func (xc *XClient) Close() error {
 	return nil
 }
 
+// 复用已经创建好的 Socket 连接
+// 使用 clients 保存创建成功的 Client 实例
 func (xc *XClient) dial(rpcAddr string) (*Client, error) {
 	xc.mu.Lock()
 	defer xc.mu.Unlock()
@@ -92,6 +94,7 @@ func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, re
 			if reply != nil {
 				clonedReply = reflect.New(reflect.ValueOf(reply).Elem().Type()).Interface()
 			}
+			// 某调用失败后，cancel根据ctx通知停止正在执行xc.call的协程
 			err := xc.call(rpcAddr, ctx, serviceMethod, args, clonedReply)
 			mu.Lock()
 			if err != nil && e == nil {
