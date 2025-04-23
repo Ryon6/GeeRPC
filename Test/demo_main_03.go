@@ -1,3 +1,5 @@
+// 服务注册
+
 package Test
 
 import (

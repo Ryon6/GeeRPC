@@ -1,3 +1,5 @@
+// 注册中心
+
 package Test
 
 import (
