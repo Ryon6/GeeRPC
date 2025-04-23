@@ -1,5 +1,6 @@
 package registry
 
+// 注册中心仅负责维护活跃的服务器，并不负责维护服务器具体提供哪些方法
 // GeeRegistry is a simple register center, provide following functions.
 // add a server and receive heartbeat to keep it alive.
 // returns all alive servers and delete dead servers sync simultaneously.

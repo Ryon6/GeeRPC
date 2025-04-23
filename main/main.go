@@ -6,5 +6,6 @@ func main() {
 	// error
 	// Test.DemoMain02()
 	// log.Println("hello, world!")
-	Test.DemoMain07()
+	Test.DemoCalc()
+	// Test.DemoMain07()
 }

@@ -60,8 +60,8 @@ func broadcast_07(registry string) {
 		go func(i int) {
 			defer wg.Done()
 			foo(xc, context.Background(), "broadcast", "Foo.Sum", &Args{Num1: i, Num2: i})
-			ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
-			foo(xc, ctx, "broadcast", "Foo.Sleep", &Args{Num1: i, Num2: i * i})
+			// ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
+			// foo(xc, ctx, "broadcast", "Foo.Sleep", &Args{Num1: i, Num2: i * i})
 		}(i)
 	}
 	wg.Wait()

@@ -206,6 +206,7 @@ func (server *Server) handleRequest(cc codec.Codec, req *request,
 	}
 }
 
+// 将rcvr提供的方法都注册到服务器维护的serviceMap中
 func (server *Server) Register(rcvr interface{}) error {
 	s := newService(rcvr)
 	if _, dup := server.serviceMap.LoadOrStore(s.name, s); dup {
