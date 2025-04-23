@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-func startServer(wg *sync.WaitGroup, registryAddr string) {
+func startCalcServer(wg *sync.WaitGroup, registryAddr string) {
 	var cs CalcService
 	// 监听所有接口：
 	// 绑定到 [::]:12345 或 0.0.0.0:12345 表示监听所有网络接口上的该端口。
@@ -26,7 +26,7 @@ func startServer(wg *sync.WaitGroup, registryAddr string) {
 }
 
 // 启动注册中心
-func startRegistry(wg *sync.WaitGroup, registryPath string) {
+func startCalcRegistry(wg *sync.WaitGroup, registryPath string) {
 	// 本质上就是要保证http.Serve()将监听器监听的http报文交给正确处理器执行
 	// 1. 调用http.Serve(l,r/nil) 当监听器接到http请求，会调用相应的处理器
 	// 2. 如果为nil，需要提前将将注册中心路径及对应处理器注册到默认路由器，然后监听器监听到请求后会到默认的路由器找是否存在相应路径的处理器
@@ -45,9 +45,9 @@ func DemoCalc() {
 	const registryPath = "http://localhost:8001/geercp/demo_registry"
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go startServer(&wg, registryPath)
+	go startCalcServer(&wg, registryPath)
 	wg.Add(1)
-	go startRegistry(&wg, registryPath)
+	go startCalcRegistry(&wg, registryPath)
 	wg.Wait()
 
 	d := xclient.NewGeeRegistryDiscovery(registryPath, 0) // 服务发现registryPath的注册中心发送HTTP报文发现服务
