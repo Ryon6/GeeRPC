@@ -19,7 +19,7 @@ const MagicNumber = 0x3bef5c
 
 const (
 	connected        = "200 Connected to Gee RPC"
-	defaultRPCPath   = "/_geeprc_"
+	defaultRPCPath   = "/_geerpc_"
 	defaultDebugPath = "/debug/geerpc"
 )
 
