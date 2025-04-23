@@ -11,9 +11,6 @@ import (
 	"sync"
 )
 
-// 一个url，服务发现会通过向该url发送GET请求，获取注册到注册中心的方法
-const registryPath = "http://localhost:8001/geercp/demo_registry"
-
 func startServer(wg *sync.WaitGroup, registryAddr string) {
 	var cs CalcService
 	// 监听所有接口：
@@ -30,16 +27,22 @@ func startServer(wg *sync.WaitGroup, registryAddr string) {
 
 // 启动注册中心
 func startRegistry(wg *sync.WaitGroup, registryPath string) {
-	// 创建注册中心实例
+	// 本质上就是要保证http.Serve()将监听器监听的http报文交给正确处理器执行
+	// 1. 调用http.Serve(l,r/nil) 当监听器接到http请求，会调用相应的处理器
+	// 2. 如果为nil，需要提前将将注册中心路径及对应处理器注册到默认路由器，然后监听器监听到请求后会到默认的路由器找是否存在相应路径的处理器
+	// 3. 如果不为nil，则会直接将报文交给处理器即r.ServeHTTP
 	r := registry.NewGeeRegistry(0)
 	r.HandleHTTP("/geercp/demo_registry")
+	// http.Handle("/geercp/demo_registry", r)
 	l, _ := net.Listen("tcp", ":8001")
-	log.Printf("所有到%s的请求都会被传递给注册中心的r.serveHTTP()", l.Addr().String())
+	log.Printf("所有到%s@%s的请求都会被传递给注册中心的r.serveHTTP()", l.Addr().Network(), l.Addr().String())
 	wg.Done()
-	http.Serve(l, r)
+	_ = http.Serve(l, nil)
 }
 
 func DemoCalc() {
+	// 一个url，服务发现会通过向该url发送GET请求，获取注册到注册中心的方法
+	const registryPath = "http://localhost:8001/geercp/demo_registry"
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go startServer(&wg, registryPath)
