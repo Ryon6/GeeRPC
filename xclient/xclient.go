@@ -113,7 +113,7 @@ func (xc *XClient) Go(serviceMethod string, args, reply interface{}, done chan *
 // AsyncCall invokes the function asynchronously and returns a channel that will
 // receive the result when the call completes.
 func (xc *XClient) AsyncCall(serviceMethod string, args, reply interface{}) <-chan *Call {
-	done := make(chan *Call, 1)
+	done := make(chan *Call, 10)
 	xc.Go(serviceMethod, args, reply, done)
 	return done
 }
