@@ -52,7 +52,7 @@ func demoXClientAsync(registryAddr string) {
 	// 创建XClient
 	discovery := xclient.NewGeeRegistryDiscovery(registryAddr, 0)
 	xc := xclient.NewXClient(discovery, xclient.RandomSelect, nil)
-	// defer xc.Close()
+	defer xc.Close()
 
 	// 示例1: 使用Go方法
 	fmt.Println("--- Go方法示例 ---")
