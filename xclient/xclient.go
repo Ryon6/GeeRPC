@@ -65,6 +65,21 @@ func (xc *XClient) call(rpcAddr string, ctx context.Context, serviceMethod strin
 	return client.Call(ctx, serviceMethod, args, reply)
 }
 
+func (xc *XClient) goCall(rpcAddr string, serviceMethod string, args, reply interface{}, done chan *Call) *Call {
+	client, err := xc.dial(rpcAddr)
+	if err != nil {
+		call := &Call{
+			ServiceMethod: serviceMethod,
+			Error:         err,
+		}
+		if done != nil {
+			done <- call
+		}
+		return call
+	}
+	return client.Go(serviceMethod, args, reply, done)
+}
+
 // Call invokes the named function, waits for it to complete,
 // and returns its error status.
 // xc will choose a proper server.
@@ -74,6 +89,33 @@ func (xc *XClient) Call(ctx context.Context, serviceMethod string, args, reply i
 		return err
 	}
 	return xc.call(rpcAddr, ctx, serviceMethod, args, reply)
+}
+
+// Go invokes the function asynchronously. It returns the Call structure representing
+// the invocation. The done channel will signal when the call is complete by returning
+// the same Call object. If done is nil, the channel will be allocated automatically.
+// If non-nil, done must be buffered or Go will deliberately crash.
+func (xc *XClient) Go(serviceMethod string, args, reply interface{}, done chan *Call) *Call {
+	rpcAddr, err := xc.d.Get(xc.mode)
+	if err != nil {
+		call := &Call{
+			ServiceMethod: serviceMethod,
+			Error:         err,
+		}
+		if done != nil {
+			done <- call
+		}
+		return call
+	}
+	return xc.goCall(rpcAddr, serviceMethod, args, reply, done)
+}
+
+// AsyncCall invokes the function asynchronously and returns a channel that will
+// receive the result when the call completes.
+func (xc *XClient) AsyncCall(serviceMethod string, args, reply interface{}) <-chan *Call {
+	done := make(chan *Call, 1)
+	xc.Go(serviceMethod, args, reply, done)
+	return done
 }
 
 func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, reply interface{}) error {
@@ -110,4 +152,40 @@ func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, re
 	}
 	wg.Wait()
 	return e
+}
+
+// AsyncBroadcast invokes the function on all servers asynchronously and returns
+// a channel that will receive all results as they complete.
+func (xc *XClient) AsyncBroadcast(ctx context.Context, serviceMethod string, args, reply interface{}) <-chan *Call {
+	servers, err := xc.d.GetAll()
+	if err != nil {
+		done := make(chan *Call, 1)
+		done <- &Call{
+			ServiceMethod: serviceMethod,
+			Error:         err,
+		}
+		return done
+	}
+
+	done := make(chan *Call, len(servers))
+	var clonedReply interface{}
+	if reply != nil {
+		clonedReply = reflect.New(reflect.ValueOf(reply).Elem().Type()).Interface()
+	}
+
+	for _, rpcAddr := range servers {
+		go func(rpcAddr string) {
+			err := xc.call(rpcAddr, ctx, serviceMethod, args, clonedReply)
+			call := &Call{
+				ServiceMethod: serviceMethod,
+				Error:         err,
+			}
+			if err == nil && reply != nil {
+				call.Reply = clonedReply
+			}
+			done <- call
+		}(rpcAddr)
+	}
+
+	return done
 }
