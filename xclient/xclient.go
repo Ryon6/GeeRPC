@@ -65,7 +65,10 @@ func (xc *XClient) call(rpcAddr string, ctx context.Context, serviceMethod strin
 	return client.Call(ctx, serviceMethod, args, reply)
 }
 
+// 异步调用
 func (xc *XClient) goCall(rpcAddr string, serviceMethod string, args, reply interface{}, done chan *Call) *Call {
+	// 与call逻辑类似，先获取client，然后由client.Go发起异步调用
+	// 若失败，将错误保存在call中返回
 	client, err := xc.dial(rpcAddr)
 	if err != nil {
 		call := &Call{
