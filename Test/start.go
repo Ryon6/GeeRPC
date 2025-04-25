@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func startRegistry(wg *sync.WaitGroup, path string) {
+func StartRegistry(wg *sync.WaitGroup, path string) {
 	r := registry.NewGeeRegistry(0)
 	r.HandleHTTP(path)
 	l, _ := net.Listen("tcp", ":8001")
@@ -16,7 +16,7 @@ func startRegistry(wg *sync.WaitGroup, path string) {
 	_ = http.Serve(l, r)
 }
 
-func startXServer(serverType string, wg *sync.WaitGroup, regAddr string, serverAddr chan string) {
+func StartXServer(serverType string, wg *sync.WaitGroup, regAddr string, serverAddr chan string) {
 	switch serverType {
 	case "http":
 		startHTTPServer(wg, regAddr, serverAddr)

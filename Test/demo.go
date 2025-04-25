@@ -15,14 +15,14 @@ func Demo() {
 	var wg sync.WaitGroup
 	var server_addr = make(chan string, 10)
 	wg.Add(1)
-	go startRegistry(&wg, registryAddr)
+	go StartRegistry(&wg, registryAddr)
 	wg.Wait()
 	for i := 0; i < 3; i++ {
 		wg.Add(1)
-		go startXServer("tcp", &wg, registryAddr, server_addr)
+		go StartXServer("tcp", &wg, registryAddr, server_addr)
 	}
 	wg.Add(1)
-	go startXServer("http", &wg, registryAddr, server_addr)
+	go StartXServer("http", &wg, registryAddr, server_addr)
 	wg.Wait()
 
 	size := 200000
