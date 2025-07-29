@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"geerpc/Test"
 	"geerpc/codec"
 	"geerpc/geerpc"
+	Test "geerpc/test"
 	"geerpc/xclient"
 )
 
