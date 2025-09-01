@@ -10,7 +10,7 @@ import (
 
 	"geerpc/codec"
 	"geerpc/geerpc"
-	Test "geerpc/test"
+	test "geerpc/test"
 	"geerpc/xclient"
 )
 
@@ -34,10 +34,10 @@ func main() {
 
 	serverAddr := make(chan string, 1)
 	wg.Add(1)
-	go Test.StartRegistry(&wg, registryAddr)
+	go test.StartRegistry(&wg, registryAddr)
 	wg.Wait()
 	wg.Add(1)
-	go Test.StartXServer("tcp", &wg, registryAddr, serverAddr)
+	go test.StartXServer("tcp", &wg, registryAddr, serverAddr)
 	wg.Wait()
 
 	ctx, cancel := context.WithTimeout(context.Background(), *duration)
@@ -63,7 +63,7 @@ func main() {
 
 			for ctx.Err() == nil {
 				var reply int
-				err := client.Call(ctx, service_method, &Test.CArgs{A: 1, B: 2}, &reply)
+				err := client.Call(ctx, service_method, &test.CArgs{A: 1, B: 2}, &reply)
 				if err != nil {
 					atomic.AddUint64(&failed, 1)
 					log.Printf("call failed: %v", err)
